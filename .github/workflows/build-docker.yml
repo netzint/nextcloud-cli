@@ -36,7 +36,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v4
         with:
-          images: ghcr.io/ni-nextcloud-nginx
+          images: ghcr.io/${{ github.repository }}
 
       - name: Build docker container
         uses: docker/build-push-action@v4
