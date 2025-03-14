@@ -1,0 +1,73 @@
+services:
+  nextcloud-cron:
+    container_name: nextcloud-nextcloud-cron
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    entrypoint: /cron.sh
+    image: nextcloud:30.0.6-fpm
+    restart: always
+    volumes:
+    - ./data/nc_html:/var/www/html:z
+  nextcloud-fpm:
+    container_name: nextcloud-nextcloud-fpm
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    env_file:
+    - ./nextcloud.env
+    image: nextcloud:30.0.6-fpm
+    restart: unless-stopped
+    volumes:
+    - ./data/nc_html:/var/www/html:z
+    - ./data/nc_config:/var/www/html/config:z
+    - ./data/nc_custom_apps:/var/www/html/custom_apps:z
+    - ./data/nc_data:/var/www/html/data:z
+  nginx:
+    build: ./nextcloud-ngnix
+    container_name: nextcloud-nginx
+    depends_on:
+      nextcloud-fpm:
+        condition: service_started
+    env_file:
+    - ./nextcloud.env
+    ports:
+    - 8080:80
+    - 8443:443
+    restart: unless-stopped
+    volumes:
+    - ./data/nc_html:/var/www/html:z
+  postgres:
+    container_name: nextcloud-postgres
+    env_file:
+    - ./nextcloud.env
+    healthcheck:
+      interval: 10s
+      retries: 5
+      start_period: 20s
+      test:
+      - CMD-SHELL
+      - pg_isready -U nextcloud -d nextcloud -h 127.0.0.1 || exit 1
+      timeout: 5s
+    image: postgres:17.4
+    restart: unless-stopped
+    volumes:
+    - ./data/nc_postgres:/var/lib/postgresql/data:Z
+  redis:
+    command:
+    - redis-server
+    - --appendonly
+    - 'yes'
+    - --requirepass
+    - ${REDIS_PASS}
+    container_name: nextcloud-redis
+    env_file:
+    - ./nextcloud.env
+    image: redis:7.4.2
+    restart: unless-stopped
+    volumes:
+    - ./data/nc_redis:/data
