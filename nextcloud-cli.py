@@ -590,7 +590,7 @@ def build_compose_services(settings, nginx_http_port, nginx_https_port, env_file
         pg_cname = maybe_container_name("postgres", pg_version)
         if pg_cname:
             pg_service["container_name"] = pg_cname
-        services["postgres"] = pg_service
+        services["nextcloud-postgres"] = pg_service
 
     # Redis Service
     if settings["install_redis"]:
@@ -617,7 +617,7 @@ def build_compose_services(settings, nginx_http_port, nginx_https_port, env_file
         redis_cname = maybe_container_name("redis", redis_version)
         if redis_cname:
             redis_service["container_name"] = redis_cname
-        services["redis"] = redis_service
+        services["nextcloud-redis"] = redis_service
 
     # Nextcloud-FPM Service
     if settings["install_nextcloud"]:
@@ -680,6 +680,7 @@ def build_compose_services(settings, nginx_http_port, nginx_https_port, env_file
             "env_file": [env_file],
             "ports": [f"{nginx_http_port}:80", f"{nginx_https_port}:443"],
             "volumes": [f"{os.path.join(base_path, 'data', 'nc_html')}:/var/www/html:z"],
+            "image": "ghcr.io/nextcloud-cli/nextcloud-ngnix:latest",
             "depends_on": {}
         }
         if settings["install_nextcloud"]:
@@ -687,7 +688,7 @@ def build_compose_services(settings, nginx_http_port, nginx_https_port, env_file
         nginx_cname = maybe_container_name("nginx", nginx_version)
         if nginx_cname:
             nginx_service["container_name"] = nginx_cname
-        services["nginx"] = nginx_service
+        services["nextcloud-nginx"] = nginx_service
 
     # Cron Service for Nextcloud
     cron_service = {
