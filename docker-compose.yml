@@ -1,6 +1,6 @@
 services:
   nextcloud-cron:
-    container_name: nextcloud-nextcloud-cron
+    container_name: nextcloud-cron
     depends_on:
       postgres:
         condition: service_healthy
@@ -12,7 +12,7 @@ services:
     volumes:
     - ./data/nc_html:/var/www/html:z
   nextcloud-fpm:
-    container_name: nextcloud-nextcloud-fpm
+    container_name: nextcloud-fpm
     depends_on:
       postgres:
         condition: service_healthy
