@@ -44,5 +44,5 @@ jobs:
           context: ./nextcloud-nginx/
           file: ./nextcloud-nginx/Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
-          tags: netzint/nextcloud-ngnix:latest
+          tags: ghcr.io/${{ github.repository }}/nextcloud-ngnix:latest
           labels: ${{ steps.meta.outputs.labels }}
