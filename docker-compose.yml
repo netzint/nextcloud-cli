@@ -28,7 +28,6 @@ services:
     - ./data/nc_custom_apps:/var/www/html/custom_apps:z
     - ./data/nc_data:/var/www/html/data:z
   nginx:
-    build: ./nextcloud-ngnix
     container_name: nextcloud-nginx
     depends_on:
       nextcloud-fpm:
@@ -41,6 +40,7 @@ services:
     restart: unless-stopped
     volumes:
     - ./data/nc_html:/var/www/html:z
+    image: ghcr.io/netzint/nextcloud-cli
   postgres:
     container_name: nextcloud-postgres
     env_file:
