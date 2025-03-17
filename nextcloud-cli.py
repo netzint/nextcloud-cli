@@ -675,7 +675,6 @@ def build_compose_services(settings, nginx_http_port, nginx_https_port, env_file
             nginx_version = nginx_versions[0] if nginx_versions else "unknown"
         console.print(f"[bright_green]Nginx version: {nginx_version}[/bright_green]")
         nginx_service = {
-            "build": os.path.join(base_path, "nextcloud-ngnix"),
             "restart": "unless-stopped",
             "env_file": [env_file],
             "ports": [f"{nginx_http_port}:80", f"{nginx_https_port}:443"],
