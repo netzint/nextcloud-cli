@@ -2,9 +2,9 @@ services:
   nextcloud-cron:
     container_name: nextcloud-cron
     depends_on:
-      postgres:
+      nextcloud-postgres:
         condition: service_healthy
-      redis:
+      nextcloud-redis:
         condition: service_started
     entrypoint: /cron.sh
     image: nextcloud:30.0.6-fpm
@@ -14,9 +14,9 @@ services:
   nextcloud-fpm:
     container_name: nextcloud-fpm
     depends_on:
-      postgres:
+      nextcloud-postgres:
         condition: service_healthy
-      redis:
+      nextcloud-redis:
         condition: service_started
     env_file:
     - ./nextcloud.env

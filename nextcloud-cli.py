@@ -651,9 +651,9 @@ def build_compose_services(settings, nginx_http_port, nginx_https_port, env_file
             "depends_on": {}
         }
         if settings["install_postgres"]:
-            nc_service["depends_on"]["postgres"] = {"condition": "service_healthy"}
+            nc_service["depends_on"]["nextcloud-postgres"] = {"condition": "service_healthy"}
         if settings["install_redis"]:
-            nc_service["depends_on"]["redis"] = {"condition": "service_started"}
+            nc_service["depends_on"]["nextcloud-redis"] = {"condition": "service_started"}
         nc_cname = maybe_container_name("nextcloud-fpm", settings["nc_fpm_version"])
         if nc_cname:
             nc_service["container_name"] = nc_cname
@@ -697,8 +697,8 @@ def build_compose_services(settings, nginx_http_port, nginx_https_port, env_file
         "volumes": [f"{os.path.join(base_path, 'data', 'nc_html')}:/var/www/html:z"],
         "entrypoint": "/cron.sh",
         "depends_on": {
-            "postgres": {"condition": "service_healthy"},
-            "redis": {"condition": "service_started"}
+            "nextcloud-postgres": {"condition": "service_healthy"},
+            "nextcloud-redis": {"condition": "service_started"}
         }
     }
     services["nextcloud-cron"] = cron_service
