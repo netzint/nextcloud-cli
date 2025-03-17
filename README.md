@@ -170,11 +170,3 @@ If updates are available, the script will guide you through the process.
 
 After the update, the system will automatically check the status of Nextcloud to ensure it is running correctly.
 
----
-
-## Additional Notes
-
-- Always ensure that the virtual environment is activated before running any Python commands.
-- Using Docker ensures that Nextcloud and its dependencies remain isolated and easy to manage.
-- Regularly updating your Nextcloud instance is crucial for security and performance.
-- The script provides interactive options to configure Nextcloud based on your preferences.
