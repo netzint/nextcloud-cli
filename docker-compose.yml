@@ -40,7 +40,7 @@ services:
     restart: unless-stopped
     volumes:
     - /srv/docker/nextcloud/nc_html:/var/www/html:z
-    image: ghcr.io/nextcloud-cli/nextcloud-ngnix:latest
+    image: ghcr.io/netzint/nextcloud-ngnix:latest
   nextcloud-postgres:
     container_name: nextcloud-postgres
     env_file:
