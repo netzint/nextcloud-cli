@@ -99,7 +99,7 @@ After mounting, the `lost+found` directory is automatically created on ext4 file
 ```bash
 rm -rf /srv/docker/nextcloud/lost+found
 ```
-If you want to install the container manuell you can continue with manual install(#updating-nextcloud)
+If you want to install the container manually you can continue with manual install
 ---
 
 ## Installing the Script
