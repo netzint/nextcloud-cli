@@ -22,30 +22,8 @@ Before proceeding, ensure you are using **Ubuntu** with the following requiremen
 Run the following script to install Docker:
 
 ```bash
-#!/bin/bash
-
-set -e  # Exit script on error
-
-# Add Docker GPG key
-sudo apt-get update
-sudo apt-get install -y ca-certificates curl
-sudo install -m 0755 -d /etc/apt/keyrings
-sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
-sudo chmod a+r /etc/apt/keyrings/docker.asc
-
-# Add Docker repository
-echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}") stable" | \
-    sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-
-# Update package list and install Docker
-sudo apt-get update
-sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-
-# Enable and start Docker service
-sudo systemctl enable --now docker
-
-# Verify installation
-sudo docker run --name test-container hello-world
+curl -fsSL https://get.docker.com -o get-docker.sh
+sudo sh get-docker.sh
 ```
 
 ### Partitioning and Mounting the Secondary Disk
