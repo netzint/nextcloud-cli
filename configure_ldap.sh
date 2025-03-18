@@ -25,7 +25,7 @@ docker exec --user www-data -it nextcloud-fpm /var/www/html/occ ldap:set-config 
 docker exec --user www-data -it nextcloud-fpm /var/www/html/occ ldap:set-config s01 ldapMatchingRuleInChainState   ldapMatchingRuleInChainState
 docker exec --user www-data -it nextcloud-fpm /var/www/html/occ ldap:set-config s01 ldapNestedGroups               0
 docker exec --user www-data -it nextcloud-fpm /var/www/html/occ ldap:set-config s01 ldapPagingSize                 500
-docker exec --user www-data -it nextcloud-fpm /var/www/html/occ ldap:set-config s01 ldapPort                       389
+docker exec --user www-data -it nextcloud-fpm /var/www/html/occ ldap:set-config s01 ldapPort                       $LDAPPORT
 docker exec --user www-data -it nextcloud-fpm /var/www/html/occ ldap:set-config s01 ldapTLS                        0
 docker exec --user www-data -it nextcloud-fpm /var/www/html/occ ldap:set-config s01 ldapUserAvatarRule             default
 docker exec --user www-data -it nextcloud-fpm /var/www/html/occ ldap:set-config s01 ldapUserDisplayName            displayname
