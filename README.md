@@ -131,7 +131,7 @@ If you prefer a manual installation, follow these steps:
 
 1. **Clone the repository**:
    ```bash
-   git clone https://github.com/your-repo/nextcloud-docker.git /srv/docker/nextcloud
+   git clone https://github.com/netzint/nextcloud-cli.git /srv/docker/nextcloud
    ```
 
 2. **Start the containers**:
