@@ -245,8 +245,9 @@ def create_env_file(path, pg_pass, nc_db_user, nc_db_pass, redis_pass, nc_admin_
         f"REDIS_PASS={redis_pass}",
         f"NEXTCLOUD_ADMIN_USER={nc_admin_user}",
         f"NEXTCLOUD_ADMIN_PASSWORD={nc_admin_pass}",
-        f"POSTGRES_HOST=postgres",
-        f"REDIS_HOST=redis",
+        f"NEXTCLOUD_TRUSTED_DOMAINS=",
+        f"POSTGRES_HOST=nextcloud-postgres",
+        f"REDIS_HOST=nextcoud-redis",
         ""
     ]
     try:
