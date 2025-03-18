@@ -63,7 +63,6 @@ services:
     - redis-server
     - --appendonly
     - 'yes'
-    - --requirepass
     container_name: nextcloud-redis
     env_file:
     - ./nextcloud.env
