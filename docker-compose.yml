@@ -10,7 +10,7 @@ services:
     image: nextcloud:30.0.6-fpm
     restart: always
     volumes:
-    - /srv/docker/nextcloud/nc_html:/var/www/html:z
+    - ./data/nc_html:/var/www/html:z
   nextcloud-fpm:
     container_name: nextcloud-fpm
     depends_on:
@@ -23,10 +23,10 @@ services:
     image: nextcloud:30.0.6-fpm
     restart: unless-stopped
     volumes:
-    - /srv/docker/nextcloud/nc_html:/var/www/html:z
-    - /srv/docker/nextcloud/nc_config:/var/www/html/config:z
-    - /srv/docker/nextcloud/nc_custom_apps:/var/www/html/custom_apps:z
-    - /srv/docker/nextcloud/nc_data:/var/www/html/data:z
+    - ./data/nc_html:/var/www/html:z
+    - ./data/nc_config:/var/www/html/config:z
+    - ./data/nc_custom_apps:/var/www/html/custom_apps:z
+    - ./data/nc_data:/var/www/html/data:z
   nextcloud-nginx:
     container_name: nextcloud-nginx
     depends_on:
@@ -39,7 +39,7 @@ services:
     - 8443:443
     restart: unless-stopped
     volumes:
-    - /srv/docker/nextcloud/nc_html:/var/www/html:z
+    - ./data/nc_html:/var/www/html:z
     image: ghcr.io/netzint/nextcloud-ngnix:latest
   nextcloud-postgres:
     container_name: nextcloud-postgres
@@ -56,7 +56,7 @@ services:
     image: postgres:17.4
     restart: unless-stopped
     volumes:
-    - /srv/docker/nextcloud/nc_postgres:/var/lib/postgresql/data:Z
+    - ./data/nc_postgres:/var/lib/postgresql/data:Z
   nextcloud-redis:
     command:
     - redis-server
@@ -70,4 +70,4 @@ services:
     image: redis:7.4.2
     restart: unless-stopped
     volumes:
-    - /srv/docker/nextcloud/nc_redis:/data
+    - ./data/nc_redis:/data
