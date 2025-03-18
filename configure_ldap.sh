@@ -37,3 +37,4 @@ docker exec --user www-data -it nextcloud-fpm /var/www/html/occ ldap:set-config 
 docker exec --user www-data -it nextcloud-fpm /var/www/html/occ ldap:set-config s01 turnOffCertCheck               0
 docker exec --user www-data -it nextcloud-fpm /var/www/html/occ ldap:set-config s01 turnOnPasswordChange           0
 docker exec --user www-data -it nextcloud-fpm /var/www/html/occ ldap:set-config s01 useMemberOfToDetectMembership  1
+docker exec --user www-data -it nextcloud-fpm /var/www/html/occ config:system:set skeletondirectory --value=""
