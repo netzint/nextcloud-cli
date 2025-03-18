@@ -12,6 +12,7 @@ services:
     volumes:
     - ./data/nc_html:/var/www/html:z
   nextcloud-fpm:
+    entrypoint: ["/bin/bash", "-c" , "apt update && apt install smbclient libsmbclient-dev -y && pecl install smbclient && docker-php-ext-enable smbclient && /entrypoint.sh php-fpm"]
     container_name: nextcloud-fpm
     depends_on:
       nextcloud-postgres:
