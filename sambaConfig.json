@@ -1,0 +1,52 @@
+[
+    {
+        "mount_id": 1,
+        "mount_point": "\/Home",
+        "storage": "\\OCA\\Files_External\\Lib\\Storage\\SMB",
+        "authentication_type": "password::logincredentials",
+        "configuration": {
+            "host": "10.0.0.1",
+            "share": "default-school",
+            "root": "$home",
+            "domain": "schule",
+            "show_hidden": false,
+            "check_acl": true,
+            "timeout": ""
+        },
+        "options": {
+            "encrypt": true,
+            "previews": true,
+            "enable_sharing": true,
+            "filesystem_check_changes": 1,
+            "encoding_compatibility": false,
+            "readonly": false
+        },
+        "applicable_users": [],
+        "applicable_groups": []
+    },
+    {
+        "mount_id": 3,
+        "mount_point": "\/Share",
+        "storage": "\\OCA\\Files_External\\Lib\\Storage\\SMB",
+        "authentication_type": "password::logincredentials",
+        "configuration": {
+            "host": "10.0.0.1",
+            "share": "default-school",
+            "root": "share",
+            "domain": "schule",
+            "show_hidden": false,
+            "check_acl": true,
+            "timeout": ""
+        },
+        "options": {
+            "encrypt": true,
+            "previews": true,
+            "enable_sharing": true,
+            "filesystem_check_changes": 1,
+            "encoding_compatibility": false,
+            "readonly": false
+        },
+        "applicable_users": [],
+        "applicable_groups": []
+    }
+]
