@@ -11,6 +11,8 @@ services:
     restart: always
     volumes:
     - ./data/nc_html:/var/www/html:z
+    - ./data/nc_config:/var/www/html/config:z
+
   nextcloud-fpm:
     entrypoint: ["/bin/bash", "-c" , "apt update && apt install smbclient libsmbclient-dev -y && pecl install smbclient && docker-php-ext-enable smbclient ; /entrypoint.sh php-fpm"]
     container_name: nextcloud-fpm
@@ -54,7 +56,7 @@ services:
       - CMD-SHELL
       - pg_isready -U nextcloud -d nextcloud -h 127.0.0.1 || exit 1
       timeout: 5s
-    image: postgres:17.4
+    image: postgres:16.8
     restart: unless-stopped
     volumes:
     - ./data/nc_postgres:/var/lib/postgresql/data:Z
