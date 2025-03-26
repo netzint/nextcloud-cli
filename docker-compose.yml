@@ -39,7 +39,7 @@ services:
     - ./nextcloud.env
     ports:
     - 8080:80
-    - 8443:443
+    - 443:443
     restart: unless-stopped
     volumes:
     - ./data/nc_html:/var/www/html:z
