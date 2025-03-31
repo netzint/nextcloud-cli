@@ -3,3 +3,4 @@
 /dist
 nextcloud.env
 ldap.env
+/data

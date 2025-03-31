@@ -1,0 +1,35 @@
+services:
+  10274-nextcloud-1-mariadb:
+    container_name: 10274-nextcloud-1-mariadb
+    image: mariadb:10.11
+    environment:
+      - MYSQL_PASSWORD=NWU2NmM5MWRjZTg1NmI1ZGFjZTI3MWI5
+      - MYSQL_DATABASE=nextcloud
+      - MYSQL_USER=nextcloud_db_user
+      - MYSQL_RANDOM_ROOT_PASSWORD=1
+    volumes:
+      - /srv/netzint/data/10274/nextcloud/1/db:/var/lib/mysql
+    restart: always
+
+  nextcloud-cron:
+    image: nextcloud:29.0.4-fpm
+    volumes:
+      - /srv/netzint/data/10274/nextcloud/1/nc_html:/var/www/html
+      - /srv/netzint/data/10274/nextcloud/1/nc_config:/var/www/html/config
+      - /srv/netzint/data/10274/nextcloud/1/nc_custom_apps:/var/www/html/custom_apps
+      - /srv/netzint/data/10274/nextcloud/1/nc_data:/var/www/html/data
+
+  nextcloud-fpm:
+    image: nextcloud:29.0.4-fpm
+    volumes:
+      - /srv/netzint/data/10274/nextcloud/1/nc_html:/var/www/html
+      - /srv/netzint/data/10274/nextcloud/1/nc_config:/var/www/html/config
+      - /srv/netzint/data/10274/nextcloud/1/nc_custom_apps:/var/www/html/custom_apps
+      - /srv/netzint/data/10274/nextcloud/1/nc_data:/var/www/html/data
+
+  nextcloud-nginx:
+    volumes:
+      - /srv/netzint/data/10274/nextcloud/1/nc_html:/var/www/html
+      - /srv/netzint/data/10274/nextcloud/1/nc_config:/var/www/html/config
+      - /srv/netzint/data/10274/nextcloud/1/nc_custom_apps:/var/www/html/custom_apps
+      - /srv/netzint/data/10274/nextcloud/1/nc_data:/var/www/html/data
