@@ -10,11 +10,7 @@ services:
     image: nextcloud:30.0.6-fpm
     restart: always
     volumes:
-    - ./data/nc_html:/var/www/html:z
-    - ./data/nc_config:/var/www/html/config:z
-    - ./data/nc_custom_apps:/var/www/html/custom_apps:z
-    - ./data/nc_data:/var/www/html/data:z
-
+    - ./data/nc_data:/var/www/html:z
   nextcloud-fpm:
     entrypoint: ["/bin/bash", "-c" , "apt update && apt install smbclient libsmbclient-dev -y && pecl install smbclient && docker-php-ext-enable smbclient ; /entrypoint.sh php-fpm"]
     container_name: nextcloud-fpm
@@ -28,9 +24,7 @@ services:
     image: nextcloud:30.0.6-fpm
     restart: unless-stopped
     volumes:
-    - ./data/nc_html:/var/www/html:z
-    - ./data/nc_config:/var/www/html/config:z
-    - ./data/nc_custom_apps:/var/www/html/custom_apps:z
+    - ./data/nc_data:/var/www/html:z
   nextcloud-nginx:
     container_name: nextcloud-nginx
     depends_on:
@@ -46,7 +40,7 @@ services:
       - 80
     restart: unless-stopped
     volumes:
-    - ./data/nc_html:/var/www/html:z
+    - ./data/nc_data:/var/www/html:z
     image: ghcr.io/netzint/nextcloud-ngnix:latest
   nextcloud-postgres:
     container_name: nextcloud-postgres
