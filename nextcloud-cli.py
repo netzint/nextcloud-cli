@@ -210,7 +210,7 @@ def create_local_directories(base_path):
             os.path.join(base_path, "data", "nc_custom_apps"),
             os.path.join(base_path, "data", "nc_data"),
             os.path.join(base_path, "data", "nginx_conf"),
-            os.path.join(base_path, "nextcloud-ngnix")
+            os.path.join(base_path, "nextcloud-nginx")
         ]
         for d in dirs:
             try:
@@ -680,7 +680,7 @@ def build_compose_services(settings, nginx_http_port, nginx_https_port, env_file
             "env_file": [env_file],
             "ports": [f"{nginx_http_port}:80", f"{nginx_https_port}:443"],
             "volumes": [f"{os.path.join(base_path, 'data', 'nc_html')}:/var/www/html:z"],
-            "image": "ghcr.io/nextcloud-cli/nextcloud-ngnix:latest",
+            "image": "ghcr.io/nextcloud-cli/nextcloud-nginx:latest",
             "depends_on": {}
         }
         if settings["install_nextcloud"]:

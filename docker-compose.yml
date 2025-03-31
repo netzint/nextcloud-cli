@@ -41,7 +41,7 @@ services:
     restart: unless-stopped
     volumes:
     - ./data/nc_data:/var/www/html:z
-    image: ghcr.io/netzint/nextcloud-ngnix:latest
+    image: ghcr.io/netzint/nextcloud-nginx:latest
   nextcloud-postgres:
     container_name: nextcloud-postgres
     env_file:
