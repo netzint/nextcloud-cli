@@ -4,3 +4,4 @@
 nextcloud.env
 ldap.env
 /data
+/docker-compose.override.yml
