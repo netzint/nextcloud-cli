@@ -1,7 +1,7 @@
-   click
-    rich
-    pyyaml
-    requests
-    packaging
-    InquirerPy
-    docker
+click
+rich
+pyyaml
+requests
+packaging
+InquirerPy
+docker

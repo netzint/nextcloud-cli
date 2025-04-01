@@ -1,35 +1,35 @@
 services:
-  10274-nextcloud-1-mariadb:
-    container_name: 10274-nextcloud-1-mariadb
+  <ALTER DOCKER NAME>: # eg. 10274-nextcloud-1-mariadb:
+    container_name: <ALTER DOCKER NAME> # eg. 10274-nextcloud-1-mariadb
     image: mariadb:10.11
     environment:
-      - MYSQL_PASSWORD=NWU2NmM5MWRjZTg1NmI1ZGFjZTI3MWI5
-      - MYSQL_DATABASE=nextcloud
-      - MYSQL_USER=nextcloud_db_user
+      - MYSQL_PASSWORD=<ALTES MYSQL PASSWORD> # siehe /srv/netzint/data/10274/nextcloud/1/config.json
+      - MYSQL_DATABASE=<ALTE MYSQL DATENBANK> # siehe /srv/netzint/data/10274/nextcloud/1/config.json
+      - MYSQL_USER=<ALTER MYSQL USER> # siehe /srv/netzint/data/10274/nextcloud/1/config.json
       - MYSQL_RANDOM_ROOT_PASSWORD=1
     volumes:
-      - /srv/netzint/data/10274/nextcloud/1/db:/var/lib/mysql
+      - <ALTER PFAD ZUM DB ORDNER>:/var/lib/mysql # eg. /srv/netzint/data/10274/nextcloud/1/db
     restart: always
 
   nextcloud-cron:
-    image: nextcloud:29.0.4-fpm
+    image: nextcloud:29.0.4-fpm # aktuelle Version eintragen!
     volumes:
-      - /srv/netzint/data/10274/nextcloud/1/nc_html:/var/www/html
-      - /srv/netzint/data/10274/nextcloud/1/nc_config:/var/www/html/config
-      - /srv/netzint/data/10274/nextcloud/1/nc_custom_apps:/var/www/html/custom_apps
-      - /srv/netzint/data/10274/nextcloud/1/nc_data:/var/www/html/data
+      - <PFAD ZUM ALTEN nc_html ORDNER>:/var/www/html # eg. /srv/netzint/data/10274/nextcloud/1/nc_html
+      - <PFAD ZUM ALTEN nc_config ORDNER>:/var/www/html/config # eg. /srv/netzint/data/10274/nextcloud/1/nc_config
+      - <PFAD ZUM ALTEN nc_custom_apps ORDNER>:/var/www/html/custom_apps # eg. /srv/netzint/data/10274/nextcloud/1/nc_custom_apps
+      - <PFAD ZUM ALTEN nc_data ORDNER>:/var/www/html/data # eg. /srv/netzint/data/10274/nextcloud/1/nc_data
 
   nextcloud-fpm:
-    image: nextcloud:29.0.4-fpm
+    image: nextcloud:29.0.4-fpm # aktuelle Version eintragen!
     volumes:
-      - /srv/netzint/data/10274/nextcloud/1/nc_html:/var/www/html
-      - /srv/netzint/data/10274/nextcloud/1/nc_config:/var/www/html/config
-      - /srv/netzint/data/10274/nextcloud/1/nc_custom_apps:/var/www/html/custom_apps
-      - /srv/netzint/data/10274/nextcloud/1/nc_data:/var/www/html/data
+      - <PFAD ZUM ALTEN nc_html ORDNER>:/var/www/html # eg. /srv/netzint/data/10274/nextcloud/1/nc_html
+      - <PFAD ZUM ALTEN nc_config ORDNER>:/var/www/html/config # eg. /srv/netzint/data/10274/nextcloud/1/nc_config
+      - <PFAD ZUM ALTEN nc_custom_apps ORDNER>:/var/www/html/custom_apps # eg. /srv/netzint/data/10274/nextcloud/1/nc_custom_apps
+      - <PFAD ZUM ALTEN nc_data ORDNER>:/var/www/html/data # eg. /srv/netzint/data/10274/nextcloud/1/nc_data
 
   nextcloud-nginx:
     volumes:
-      - /srv/netzint/data/10274/nextcloud/1/nc_html:/var/www/html
-      - /srv/netzint/data/10274/nextcloud/1/nc_config:/var/www/html/config
-      - /srv/netzint/data/10274/nextcloud/1/nc_custom_apps:/var/www/html/custom_apps
-      - /srv/netzint/data/10274/nextcloud/1/nc_data:/var/www/html/data
+      - <PFAD ZUM ALTEN nc_html ORDNER>:/var/www/html # eg. /srv/netzint/data/10274/nextcloud/1/nc_html
+      - <PFAD ZUM ALTEN nc_config ORDNER>:/var/www/html/config # eg. /srv/netzint/data/10274/nextcloud/1/nc_config
+      - <PFAD ZUM ALTEN nc_custom_apps ORDNER>:/var/www/html/custom_apps # eg. /srv/netzint/data/10274/nextcloud/1/nc_custom_apps
+      - <PFAD ZUM ALTEN nc_data ORDNER>:/var/www/html/data # eg. /srv/netzint/data/10274/nextcloud/1/nc_data

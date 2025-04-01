@@ -19,6 +19,9 @@ from rich.console import Console
 from rich.prompt import Prompt, Confirm
 from rich import print
 
+import urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
 console = Console()
 
 # ─── Constants ───────────────────────────────────────────────
@@ -163,8 +166,8 @@ def postgres_healthcheck(pg_user, pg_password):
 # ─── Base Path and Filesystem Setup ─────────────────────────────
 
 def prompt_base_path():
-    """Prompts the base path for Docker files (default: ./docker/nextcloud/)."""
-    return Prompt.ask("[bright_blue]Please enter the base path for Docker files[/bright_blue]", default="./docker/nextcloud/")
+    """Prompts the base path for Docker files (default: /srv/docker/nextcloud-cli/)."""
+    return Prompt.ask("[bright_blue]Please enter the base path for Docker files[/bright_blue]", default="/srv/docker/nextcloud-cli/")
 
 def setup_nginx_build_folder(base_path):
     """
@@ -489,8 +492,10 @@ def start_menu():
         "type": "list",
         "name": "action",
         "message": "Install or Update?",
-        "choices": ["install", "update"],
-        "default": "install"
+        # "choices": ["install", "update"],
+        "choices": ["update"],
+        # "default": "install"
+        "default": "update"
     }])
     base_path = prompt_base_path()
     return service["service"], action["action"], base_path
@@ -797,7 +802,7 @@ def wait_for_nextcloud_status():
     console.print("[bright_blue]Waiting for Nextcloud to be ready...[/bright_blue]")
     while not status_ready:
         try:
-            resp = requests.get("http://localhost:8080/status.php", timeout=10)
+            resp = requests.get("https://localhost/status.php", timeout=10, verify=False)
             if ('"installed":true' in resp.text and
                 '"maintenance":false' in resp.text and
                 '"needsDbUpgrade":false' in resp.text):
@@ -897,7 +902,7 @@ def run_update_process(base_path):
         console.rule(f"Update Step {step_counter} of {total_steps}: Upgrading to version {next_version}")
         print("[bright_blue]Stopping containers...[/bright_blue]")
         try:
-            subprocess.run(["docker-compose", "-f", compose_file, "down"],
+            subprocess.run(["docker", "compose", "down"],
                            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
         except subprocess.CalledProcessError as err:
             console.print(f"[bright_red]Failed to stop containers: {err}[/bright_red]")
@@ -907,7 +912,7 @@ def run_update_process(base_path):
         update_docker_compose_images(next_version, "nextcloud-cron", base_path)
         print("[bright_blue]Starting containers...[/bright_blue]")
         try:
-            subprocess.run(["docker-compose", "-f", compose_file, "up", "-d"],
+            subprocess.run(["docker", "compose", "up", "-d"],
                            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
         except subprocess.CalledProcessError as err:
             console.print(f"[bright_red]Failed to start containers: {err}[/bright_red]")
