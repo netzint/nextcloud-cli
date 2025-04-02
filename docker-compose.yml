@@ -7,7 +7,7 @@ services:
       nextcloud-redis:
         condition: service_started
     entrypoint: /cron.sh
-    image: nextcloud:30.0.8-fpm
+    image: nextcloud:${NEXTCLOUD_VERSION}-fpm
     restart: always
     volumes:
     - ./data/nc_data:/var/www/html:z
@@ -25,7 +25,7 @@ services:
       && docker-php-ext-enable smbclient ; /entrypoint.sh php-fpm
     env_file:
     - ./nextcloud.env
-    image: nextcloud:30.0.8-fpm
+    image: nextcloud:${NEXTCLOUD_VERSION}-fpm
     restart: unless-stopped
     volumes:
     - ./data/nc_data:/var/www/html:z
