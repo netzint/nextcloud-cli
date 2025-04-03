@@ -15,6 +15,11 @@ docker exec --user www-data -it nextcloud-fpm /var/www/html/occ config:system:se
 docker exec --user www-data -it nextcloud-fpm /var/www/html/occ config:system:set default_phone_region --value="DE" --type=string
 docker exec --user www-data -it nextcloud-fpm bash -c 'echo "# Nextcloud data directory" > /var/www/html/data/.ncdata'
 docker exec --user www-data -it nextcloud-fpm /var/www/html/occ config:system:set login_protection_enabled --value=false
+docker exec --user www-data -it nextcloud-fpm /var/www/html/occ config:system:set brute_force_protection_enabled --value=false
+docker exec --user www-data -it nextcloud-fpm /var/www/html/occ config:system:set logtimezone --value="Europe/Berlin"
+docker exec --user www-data -it nextcloud-fpm /var/www/html/occ config:system:set overwrite.cli.url --value="$NEXTCLOUD_URL"
+docker exec --user www-data -it nextcloud-fpm /var/www/html/occ config:system:set overwriteprotocol --value="https"
+docker exec --user www-data -it nextcloud-fpm /var/www/html/occ config:system:set forwarded_for_headers 0 --value="HTTP_X_FORWARDED_FOR" --type=string
 
 
 echo "✅ Nextcloud Konfiguration abgeschlossen."
