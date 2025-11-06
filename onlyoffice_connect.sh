@@ -91,7 +91,7 @@ docker exec --user www-data nextcloud-fpm /var/www/html/occ config:app:set onlyo
 # Disable demo mode (matching curl: demo=false)
 docker exec --user www-data nextcloud-fpm /var/www/html/occ config:app:set onlyoffice demo --value="false"
 
-# Test the connection (optional - just for logging)
+# Test the connection
 log "🔗 Teste Verbindung zum Document Server..."
 
 CONNECTION_TEST=$(docker exec --user www-data nextcloud-fpm /var/www/html/occ onlyoffice:documentserver --check 2>&1)
@@ -100,29 +100,35 @@ if echo "$CONNECTION_TEST" | grep -qi "successfully\|erfolgreich\|success"; then
     log "✅ OnlyOffice-Verbindung erfolgreich hergestellt!"
     log "✅ Document Server ist erreichbar und funktioniert"
     exit 0
-elif echo "$CONNECTION_TEST" | grep -qi "Error while downloading"; then
-    warning "⚠️  Verbindungstest schlug fehl (Download-Fehler)"
-    warning "Das ist normal wenn OnlyOffice Nextcloud nicht direkt erreichen kann"
-    log "✅ Konfiguration wurde erfolgreich gesetzt"
-    log "📝 Teste die Verbindung direkt in der Nextcloud Web-UI unter:"
-    log "   Einstellungen -> Verwaltung -> OnlyOffice"
-    exit 0
 elif echo "$CONNECTION_TEST" | grep -qi "jwt"; then
     error "❌ JWT-Authentifizierung fehlgeschlagen!"
     error "Bitte prüfe das JWT Secret in nextcloud.env"
     echo "$CONNECTION_TEST"
     exit 1
-elif echo "$CONNECTION_TEST" | grep -qi "curl\|timeout"; then
+elif echo "$CONNECTION_TEST" | grep -qi "curl\|connection\|timeout"; then
     error "❌ Kann Document Server nicht erreichen!"
     error "Bitte prüfe:"
     echo "  1. Ist der OnlyOffice Document Server gestartet?"
     echo "  2. Ist die URL korrekt: $ONLYOFFICE_SERVER_URL"
+    echo "  3. Sind Firewall-Regeln korrekt?"
     echo "$CONNECTION_TEST"
     exit 1
 else
     warning "⚠️  Unerwartete Antwort vom Document Server"
     echo "$CONNECTION_TEST"
-    log "✅ Konfiguration wurde trotzdem gesetzt"
-    log "📝 Bitte teste die Verbindung in der Nextcloud Web-UI"
-    exit 0
+
+    # Try one more time with delay
+    log "Versuche erneut in 5 Sekunden..."
+    sleep 5
+
+    CONNECTION_TEST_2=$(docker exec --user www-data nextcloud-fpm /var/www/html/occ onlyoffice:documentserver --check 2>&1)
+
+    if echo "$CONNECTION_TEST_2" | grep -qi "successfully\|erfolgreich\|success"; then
+        log "✅ OnlyOffice-Verbindung erfolgreich hergestellt (2. Versuch)!"
+        exit 0
+    else
+        error "❌ Verbindung fehlgeschlagen auch nach erneutem Versuch"
+        echo "$CONNECTION_TEST_2"
+        exit 1
+    fi
 fi
