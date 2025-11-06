@@ -178,3 +178,44 @@ The script will:
 - Restart Nextcloud automatically
 
 ---
+
+## OnlyOffice Document Server Integration
+
+### Configuration
+
+1. **Edit your environment file**
+   ```bash
+   nano nextcloud.env
+   ```
+
+2. **Add OnlyOffice configuration**
+   ```bash
+   # OnlyOffice Document Server Configuration
+   ONLYOFFICE_SERVER_URL=https://office.your-domain.com
+   ONLYOFFICE_JWT_SECRET=YourJWTSecretHere
+   ```
+
+### Setup OnlyOffice Connection
+
+#### Manual Setup
+```bash
+./onlyoffice_connect.sh
+```
+
+#### Automated Monitoring (Recommended)
+```bash
+./setup_onlyoffice_cron.sh
+```
+
+Choose your preferred monitoring frequency:
+- **Every minute** - For production systems with frequent connection issues
+- **Every 2 minutes** - Recommended for critical systems
+- **Every 5 minutes** - Recommended for normal usage
+- **Every 15 minutes** - For stable systems
+
+### Viewing Logs
+```bash
+tail -f logs/onlyoffice_cron.log
+```
+
+---

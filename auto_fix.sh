@@ -21,5 +21,12 @@ docker exec --user www-data -it nextcloud-fpm /var/www/html/occ config:system:se
 docker exec --user www-data -it nextcloud-fpm /var/www/html/occ config:system:set overwriteprotocol --value="https"
 docker exec --user www-data -it nextcloud-fpm /var/www/html/occ config:system:set forwarded_for_headers 0 --value="HTTP_X_FORWARDED_FOR" --type=string
 
+docker exec --user www-data -it nextcloud-fpm /var/www/html/occ config:system:set customcss --value="body-login .notecard { display: none; visibility : hidden; height : 0px !important; width : 0px !important; margin : 0px; padding : 0px; overflow : hidden; }" --type=string
+
+docker exec --user www-data -it nextcloud-fpm /var/www/html/occ config:system:set allow_user_to_change_display_name --value=false
+docker exec --user www-data -it nextcloud-fpm /var/www/html/occ config:system:set allow_user_to_change_password --value=false
+docker exec --user www-data -it nextcloud-fpm /var/www/html/occ config:system:set allow_user_to_change_email_address --value=false
+docker exec --user www-data -it nextcloud-fpm /var/www/html/occ config:system:set allow_user_to_change_username --value=false
+
 
 echo "✅ Nextcloud Konfiguration abgeschlossen."
