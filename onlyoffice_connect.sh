@@ -64,28 +64,32 @@ fi
 log "📝 Setze Document Server URL: $ONLYOFFICE_SERVER_URL"
 docker exec --user www-data nextcloud-fpm /var/www/html/occ config:app:set onlyoffice DocumentServerUrl --value="$ONLYOFFICE_SERVER_URL"
 
-# Configure JWT Secret if provided
+# Configure JWT Secret if provided (matching curl which has secret empty)
 if [ -n "$ONLYOFFICE_JWT_SECRET" ]; then
     log "🔐 Setze JWT Secret..."
     docker exec --user www-data nextcloud-fpm /var/www/html/occ config:app:set onlyoffice jwt_secret --value="$ONLYOFFICE_JWT_SECRET"
-    docker exec --user www-data nextcloud-fpm /var/www/html/occ config:app:set onlyoffice jwt_header --value="AuthorizationJwt"
 else
-    warning "⚠️  Kein JWT Secret gesetzt - Verbindung könnte unsicher sein!"
+    log "Deaktiviere JWT Secret (matching working curl request)..."
+    docker exec --user www-data nextcloud-fpm /var/www/html/occ config:app:set onlyoffice jwt_secret --value=""
 fi
 
-# Additional OnlyOffice configuration for better stability
+# Additional OnlyOffice configuration - matching the working curl request
 log "⚙️  Konfiguriere OnlyOffice-Einstellungen..."
 
-# Set timeout values
-docker exec --user www-data nextcloud-fpm /var/www/html/occ config:app:set onlyoffice timeout --value="600"
+# Clear internal document server URL (leave empty like in curl)
+docker exec --user www-data nextcloud-fpm /var/www/html/occ config:app:set onlyoffice documentserverInternal --value=""
 
-# Enable verification peer (SSL)
-docker exec --user www-data nextcloud-fpm /var/www/html/occ config:app:set onlyoffice verify_peer_off --value=""
+# Clear storage URL (leave empty like in curl)
+docker exec --user www-data nextcloud-fpm /var/www/html/occ config:app:set onlyoffice StorageUrl --value=""
 
-# Set storage URL if different from main URL
-if [ -n "$NEXTCLOUD_URL" ]; then
-    docker exec --user www-data nextcloud-fpm /var/www/html/occ config:app:set onlyoffice StorageUrl --value="$NEXTCLOUD_URL"
-fi
+# Set verify_peer_off to false (matching curl: verifyPeerOff=false)
+docker exec --user www-data nextcloud-fpm /var/www/html/occ config:app:set onlyoffice verify_peer_off --value="false"
+
+# Clear JWT header (leave default)
+docker exec --user www-data nextcloud-fpm /var/www/html/occ config:app:set onlyoffice jwt_header --value=""
+
+# Disable demo mode (matching curl: demo=false)
+docker exec --user www-data nextcloud-fpm /var/www/html/occ config:app:set onlyoffice demo --value="false"
 
 # Test the connection
 log "🔗 Teste Verbindung zum Document Server..."
