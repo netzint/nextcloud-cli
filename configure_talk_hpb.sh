@@ -1,145 +1,114 @@
 #!/bin/bash
 
-# Nextcloud Talk High Performance Backend (HPB) Configuration Script
-# This script configures Nextcloud Talk to use the HPB for improved video/audio performance
-#
-# Usage: ./configure_talk_hpb.sh [--generate-secrets] [--with-recording] [--update-nginx]
+# Nextcloud Talk High Performance Backend (HPB) - Vollautomatisches Setup
+# Usage: ./configure_talk_hpb.sh
 
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
-# Colors for output
+# Colors
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
-NC='\033[0m' # No Color
+NC='\033[0m'
 
-log() { echo -e "${GREEN}[$(date +'%Y-%m-%d %H:%M:%S')]${NC} $1"; }
-error() { echo -e "${RED}[$(date +'%Y-%m-%d %H:%M:%S')] ERROR:${NC} $1"; }
-warning() { echo -e "${YELLOW}[$(date +'%Y-%m-%d %H:%M:%S')] WARNING:${NC} $1"; }
+log() { echo -e "${GREEN}[OK]${NC} $1"; }
+error() { echo -e "${RED}[ERROR]${NC} $1"; exit 1; }
+warning() { echo -e "${YELLOW}[WARN]${NC} $1"; }
 info() { echo -e "${BLUE}[INFO]${NC} $1"; }
 
-# Parse arguments
-GENERATE_SECRETS=false
-WITH_RECORDING=false
-UPDATE_NGINX=false
+echo ""
+echo "=========================================="
+echo "  Talk HPB - Automatisches Setup"
+echo "=========================================="
+echo ""
 
-for arg in "$@"; do
-    case $arg in
-        --generate-secrets)
-            GENERATE_SECRETS=true
-            ;;
-        --with-recording)
-            WITH_RECORDING=true
-            ;;
-        --update-nginx)
-            UPDATE_NGINX=true
-            ;;
-        --help|-h)
-            echo "Usage: ./configure_talk_hpb.sh [OPTIONS]"
-            echo ""
-            echo "Options:"
-            echo "  --generate-secrets  Generate new secrets and update talk-hpb.env"
-            echo "  --with-recording    Enable and configure recording backend"
-            echo "  --update-nginx      Add HPB proxy config to nginx.conf"
-            echo "  --help              Show this help message"
-            exit 0
-            ;;
-    esac
-done
-
-# Check if talk-hpb.env exists
+# ============================================================================
+# SCHRITT 1: Environment-Datei erstellen
+# ============================================================================
 ENV_FILE="./talk-hpb.env"
+
 if [ ! -f "$ENV_FILE" ]; then
-    if [ -f "./talk-hpb.env.example" ]; then
-        log "Kopiere talk-hpb.env.example nach talk-hpb.env..."
-        cp ./talk-hpb.env.example "$ENV_FILE"
-        GENERATE_SECRETS=true
-    else
+    if [ ! -f "./talk-hpb.env.example" ]; then
         error "talk-hpb.env.example nicht gefunden!"
-        exit 1
+    fi
+    info "Erstelle talk-hpb.env..."
+    cp ./talk-hpb.env.example "$ENV_FILE"
+fi
+
+# Domain aus nextcloud.env holen falls vorhanden
+if [ -f "./nextcloud.env" ]; then
+    NC_DOMAIN_FROM_ENV=$(grep -E "^NEXTCLOUD_TRUSTED_DOMAINS=" ./nextcloud.env | cut -d'=' -f2 | head -1)
+    if [ -n "$NC_DOMAIN_FROM_ENV" ]; then
+        info "Domain gefunden: $NC_DOMAIN_FROM_ENV"
+        sed -i "s/^NC_DOMAIN=.*/NC_DOMAIN=$NC_DOMAIN_FROM_ENV/" "$ENV_FILE"
+        sed -i "s/^TALK_HOST=.*/TALK_HOST=$NC_DOMAIN_FROM_ENV/" "$ENV_FILE"
     fi
 fi
 
-# Load environment variables
-set -a
+# ============================================================================
+# SCHRITT 2: Secrets generieren falls leer
+# ============================================================================
 source "$ENV_FILE"
-source ./nextcloud.env 2>/dev/null || true
-set +a
 
-# Generate secrets function
-generate_secret() {
-    openssl rand -hex 16
-}
+generate_secret() { openssl rand -hex 16; }
 
-if [ "$GENERATE_SECRETS" = true ]; then
-    log "Generiere neue Secrets..."
-
-    NEW_TURN_SECRET=$(generate_secret)
-    NEW_SIGNALING_SECRET=$(generate_secret)
-    NEW_INTERNAL_SECRET=$(generate_secret)
-    NEW_RECORDING_SECRET=$(generate_secret)
-
-    # Update env file (macOS + Linux compatible)
-    if [[ "$OSTYPE" == "darwin"* ]]; then
-        sed -i '' "s/^TURN_SECRET=.*/TURN_SECRET=$NEW_TURN_SECRET/" "$ENV_FILE"
-        sed -i '' "s/^SIGNALING_SECRET=.*/SIGNALING_SECRET=$NEW_SIGNALING_SECRET/" "$ENV_FILE"
-        sed -i '' "s/^INTERNAL_SECRET=.*/INTERNAL_SECRET=$NEW_INTERNAL_SECRET/" "$ENV_FILE"
-        sed -i '' "s/^RECORDING_SECRET=.*/RECORDING_SECRET=$NEW_RECORDING_SECRET/" "$ENV_FILE"
-    else
-        sed -i "s/^TURN_SECRET=.*/TURN_SECRET=$NEW_TURN_SECRET/" "$ENV_FILE"
-        sed -i "s/^SIGNALING_SECRET=.*/SIGNALING_SECRET=$NEW_SIGNALING_SECRET/" "$ENV_FILE"
-        sed -i "s/^INTERNAL_SECRET=.*/INTERNAL_SECRET=$NEW_INTERNAL_SECRET/" "$ENV_FILE"
-        sed -i "s/^RECORDING_SECRET=.*/RECORDING_SECRET=$NEW_RECORDING_SECRET/" "$ENV_FILE"
-    fi
-
-    # Reload variables
-    set -a
-    source "$ENV_FILE"
-    set +a
-
-    log "Secrets wurden generiert und gespeichert"
+if [ -z "$TURN_SECRET" ] || [ "$TURN_SECRET" = "" ]; then
+    info "Generiere TURN_SECRET..."
+    NEW_SECRET=$(generate_secret)
+    sed -i "s/^TURN_SECRET=.*/TURN_SECRET=$NEW_SECRET/" "$ENV_FILE"
 fi
 
-# Validate required variables
-if [ -z "$NC_DOMAIN" ]; then
-    error "NC_DOMAIN ist nicht gesetzt in $ENV_FILE!"
-    exit 1
+if [ -z "$SIGNALING_SECRET" ] || [ "$SIGNALING_SECRET" = "" ]; then
+    info "Generiere SIGNALING_SECRET..."
+    NEW_SECRET=$(generate_secret)
+    sed -i "s/^SIGNALING_SECRET=.*/SIGNALING_SECRET=$NEW_SECRET/" "$ENV_FILE"
 fi
 
-if [ -z "$SIGNALING_SECRET" ] || [ -z "$TURN_SECRET" ] || [ -z "$INTERNAL_SECRET" ]; then
-    error "Secrets fehlen! Bitte mit --generate-secrets ausführen."
-    exit 1
+if [ -z "$INTERNAL_SECRET" ] || [ "$INTERNAL_SECRET" = "" ]; then
+    info "Generiere INTERNAL_SECRET..."
+    NEW_SECRET=$(generate_secret)
+    sed -i "s/^INTERNAL_SECRET=.*/INTERNAL_SECRET=$NEW_SECRET/" "$ENV_FILE"
 fi
 
-echo ""
-log "=========================================="
-log "  Talk HPB Konfiguration"
-log "=========================================="
-echo ""
-info "NC_DOMAIN:       $NC_DOMAIN"
-info "SIGNALING_SECRET: ${SIGNALING_SECRET:0:8}..."
-info "TURN_SECRET:      ${TURN_SECRET:0:8}..."
-info "STUN/TURN Port:   ${TALK_PORT:-3478}"
-echo ""
+if [ -z "$RECORDING_SECRET" ] || [ "$RECORDING_SECRET" = "" ]; then
+    info "Generiere RECORDING_SECRET..."
+    NEW_SECRET=$(generate_secret)
+    sed -i "s/^RECORDING_SECRET=.*/RECORDING_SECRET=$NEW_SECRET/" "$ENV_FILE"
+fi
 
-# Update nginx.conf if requested
+# Reload
+source "$ENV_FILE"
+
+if [ -z "$NC_DOMAIN" ] || [ "$NC_DOMAIN" = "nextcloud.local" ]; then
+    error "NC_DOMAIN nicht gesetzt! Bitte in talk-hpb.env anpassen."
+fi
+
+log "Domain: $NC_DOMAIN"
+log "Secrets generiert"
+
+# ============================================================================
+# SCHRITT 3: Nginx-Konfiguration aktualisieren
+# ============================================================================
 NGINX_CONF="./nextcloud-nginx/nginx.conf"
-if [ "$UPDATE_NGINX" = true ]; then
-    log "Aktualisiere nginx.conf..."
 
-    if grep -q "standalone-signaling" "$NGINX_CONF"; then
-        warning "HPB Konfiguration bereits in nginx.conf vorhanden"
-    else
-        # Backup
-        cp "$NGINX_CONF" "${NGINX_CONF}.bak"
+if [ ! -f "$NGINX_CONF" ]; then
+    error "nginx.conf nicht gefunden: $NGINX_CONF"
+fi
 
-        # Create temp file with HPB config
-        HPB_TMP=$(mktemp)
-        cat > "$HPB_TMP" << 'HPBCONF'
+if grep -q "standalone-signaling" "$NGINX_CONF"; then
+    log "Nginx HPB-Config bereits vorhanden"
+else
+    info "Füge HPB-Config zu nginx.conf hinzu..."
+
+    cp "$NGINX_CONF" "${NGINX_CONF}.bak"
+
+    # Temporäre Datei mit HPB-Config
+    HPB_TMP=$(mktemp)
+    cat > "$HPB_TMP" << 'HPBCONF'
 
         # Talk HPB Signaling (WebSocket)
         location /standalone-signaling/ {
@@ -157,119 +126,98 @@ if [ "$UPDATE_NGINX" = true ]; then
 
 HPBCONF
 
-        # Insert before "location / {" using awk (works on both macOS and Linux)
-        awk -v hpb="$(cat "$HPB_TMP")" '
-            /location \/ \{/ && !done {
-                print hpb
-                done=1
-            }
-            {print}
-        ' "$NGINX_CONF" > "${NGINX_CONF}.new" && mv "${NGINX_CONF}.new" "$NGINX_CONF"
+    # Mit awk einfügen (funktioniert auf Linux und macOS)
+    awk -v hpb="$(cat "$HPB_TMP")" '
+        /location \/ \{/ && !done {
+            print hpb
+            done=1
+        }
+        {print}
+    ' "${NGINX_CONF}.bak" > "$NGINX_CONF"
 
-        rm -f "$HPB_TMP"
-
-        log "nginx.conf wurde aktualisiert (Backup: nginx.conf.bak)"
-        warning "Nginx-Container muss neu gestartet werden!"
-    fi
+    rm -f "$HPB_TMP"
+    log "Nginx-Config aktualisiert"
 fi
 
-# Check if nextcloud-fpm is running
-if ! docker ps --format '{{.Names}}' | grep -q "nextcloud-fpm"; then
-    warning "nextcloud-fpm Container läuft nicht!"
-    warning "Bitte zuerst starten: docker compose up -d"
-    echo ""
-    log "Manuelle Konfiguration der Secrets:"
-    echo "    SIGNALING_SECRET: $SIGNALING_SECRET"
-    echo "    TURN_SECRET:      $TURN_SECRET"
-    exit 0
-fi
+# ============================================================================
+# SCHRITT 4: Container starten/neustarten
+# ============================================================================
+info "Starte Container..."
 
-# Check/Install Talk app
-log "Prüfe Nextcloud Talk App..."
-APP_LIST=$(docker exec --user www-data nextcloud-fpm /var/www/html/occ app:list 2>/dev/null || echo "")
+# HPB Container starten
+docker compose -f docker-compose.yml -f docker-compose.talk-hpb.yml up -d --force-recreate nextcloud-talk-hpb 2>/dev/null || \
+docker-compose -f docker-compose.yml -f docker-compose.talk-hpb.yml up -d --force-recreate nextcloud-talk-hpb
 
-if ! echo "$APP_LIST" | grep -qi "spreed"; then
-    log "Installiere Nextcloud Talk App..."
-    if docker exec --user www-data nextcloud-fpm /var/www/html/occ app:install spreed; then
-        log "Talk App erfolgreich installiert"
-    else
-        error "Installation fehlgeschlagen!"
-        exit 1
-    fi
-else
-    log "Talk App ist installiert"
-fi
+# Nginx neu starten (um neue Config zu laden)
+docker compose -f docker-compose.yml -f docker-compose.talk-hpb.yml restart nextcloud-nginx 2>/dev/null || \
+docker-compose -f docker-compose.yml -f docker-compose.talk-hpb.yml restart nextcloud-nginx
 
-# Enable if disabled
-if echo "$APP_LIST" | grep -A1 "Disabled" | grep -qi "spreed"; then
-    log "Aktiviere Talk App..."
-    docker exec --user www-data nextcloud-fpm /var/www/html/occ app:enable spreed
-fi
+log "Container gestartet"
 
-# Configure HPB
-log "Konfiguriere High Performance Backend..."
+# Warten bis HPB bereit ist
+info "Warte auf HPB..."
+sleep 5
 
-# Signaling server (URL für Nextcloud -> HPB)
+# ============================================================================
+# SCHRITT 5: Nextcloud Talk konfigurieren
+# ============================================================================
+info "Konfiguriere Nextcloud Talk..."
+
+# Config-Berechtigung fixen
+docker exec nextcloud-fpm chown -R www-data:www-data /var/www/html/config 2>/dev/null || true
+
+# Talk App installieren/aktivieren
+docker exec --user www-data nextcloud-fpm /var/www/html/occ app:install spreed 2>/dev/null || true
+docker exec --user www-data nextcloud-fpm /var/www/html/occ app:enable spreed 2>/dev/null || true
+
+# Signaling Server konfigurieren
 HPB_URL="https://${NC_DOMAIN}/standalone-signaling"
-SIGNALING_SERVERS="[{\"server\":\"${HPB_URL}\",\"verify\":true}]"
+docker exec --user www-data nextcloud-fpm /var/www/html/occ config:app:set spreed signaling_servers \
+    --value="[{\"server\":\"${HPB_URL}\",\"verify\":true}]"
 
-docker exec --user www-data nextcloud-fpm /var/www/html/occ config:app:set spreed signaling_servers --value="$SIGNALING_SERVERS"
-log "Signaling Server: $HPB_URL"
+# Signaling Secret
+docker exec --user www-data nextcloud-fpm /var/www/html/occ config:app:set spreed signaling_secret \
+    --value="$SIGNALING_SECRET"
 
-# Signaling secret
-docker exec --user www-data nextcloud-fpm /var/www/html/occ config:app:set spreed signaling_secret --value="$SIGNALING_SECRET"
-
-# STUN server
+# STUN Server
 STUN_SERVER="${NC_DOMAIN}:${TALK_PORT:-3478}"
-docker exec --user www-data nextcloud-fpm /var/www/html/occ config:app:set spreed stun_servers --value="[\"${STUN_SERVER}\"]"
-log "STUN Server: $STUN_SERVER"
+docker exec --user www-data nextcloud-fpm /var/www/html/occ config:app:set spreed stun_servers \
+    --value="[\"${STUN_SERVER}\"]"
 
-# TURN server
-TURN_CONFIG="[{\"server\":\"${STUN_SERVER}\",\"secret\":\"${TURN_SECRET}\",\"protocols\":\"udp,tcp\"}]"
-docker exec --user www-data nextcloud-fpm /var/www/html/occ config:app:set spreed turn_servers --value="$TURN_CONFIG"
-log "TURN Server: $STUN_SERVER"
+# TURN Server
+docker exec --user www-data nextcloud-fpm /var/www/html/occ config:app:set spreed turn_servers \
+    --value="[{\"server\":\"${STUN_SERVER}\",\"secret\":\"${TURN_SECRET}\",\"protocols\":\"udp,tcp\"}]"
 
-# Recording (optional)
-if [ "$WITH_RECORDING" = true ]; then
-    log "Konfiguriere Recording Backend..."
+log "Nextcloud Talk konfiguriert"
 
-    if [ -z "$RECORDING_SECRET" ]; then
-        error "RECORDING_SECRET fehlt!"
-        exit 1
-    fi
+# ============================================================================
+# SCHRITT 6: Status prüfen
+# ============================================================================
+echo ""
+echo "=========================================="
+echo "  Setup abgeschlossen!"
+echo "=========================================="
+echo ""
+info "HPB URL:     $HPB_URL"
+info "STUN/TURN:   $STUN_SERVER"
+echo ""
 
-    RECORDING_URL="https://${NC_DOMAIN}/recording"
-    RECORDING_CONFIG="[{\"server\":\"${RECORDING_URL}\",\"secret\":\"${RECORDING_SECRET}\"}]"
-    docker exec --user www-data nextcloud-fpm /var/www/html/occ config:app:set spreed recording_servers --value="$RECORDING_CONFIG"
-    log "Recording Server: $RECORDING_URL"
+# Container-Status
+if docker ps --format '{{.Names}}' | grep -q "nextcloud-talk-hpb"; then
+    log "HPB Container läuft"
+else
+    warning "HPB Container läuft nicht!"
+fi
+
+# Signaling-Test
+echo ""
+info "Teste Verbindung..."
+if docker exec nextcloud-nginx curl -s -o /dev/null -w "%{http_code}" http://nextcloud-talk-hpb:8081/api/v1/welcome | grep -q "200"; then
+    log "HPB erreichbar via nginx"
+else
+    warning "HPB nicht erreichbar - prüfe Logs: docker logs nextcloud-talk-hpb"
 fi
 
 echo ""
-log "=========================================="
-log "  Konfiguration abgeschlossen!"
-log "=========================================="
+log "Fertig! Teste Talk im Browser."
 echo ""
-
-# Final instructions
-if ! grep -q "standalone-signaling" "$NGINX_CONF" 2>/dev/null; then
-    warning "WICHTIG: Nginx-Konfiguration fehlt noch!"
-    echo ""
-    echo "Option 1: Automatisch hinzufügen:"
-    echo "    ./configure_talk_hpb.sh --update-nginx"
-    echo ""
-    echo "Option 2: Manuell aus Template kopieren:"
-    echo "    Siehe: nextcloud-nginx/nginx-talk-hpb.conf.template"
-    echo ""
-fi
-
-log "HPB Container starten:"
-echo "    docker compose -f docker-compose.yml -f docker-compose.talk-hpb.yml up -d"
-echo ""
-
-if [ "$WITH_RECORDING" = true ]; then
-    echo "Mit Recording:"
-    echo "    docker compose -f docker-compose.yml -f docker-compose.talk-hpb.yml --profile recording up -d"
-    echo ""
-fi
-
-log "Fertig!"
