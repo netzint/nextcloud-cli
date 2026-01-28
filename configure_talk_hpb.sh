@@ -134,8 +134,13 @@ if [ "$UPDATE_NGINX" = true ]; then
     if grep -q "standalone-signaling" "$NGINX_CONF"; then
         warning "HPB Konfiguration bereits in nginx.conf vorhanden"
     else
-        # Insert HPB location before the last "location / {" block
-        HPB_CONFIG='
+        # Backup
+        cp "$NGINX_CONF" "${NGINX_CONF}.bak"
+
+        # Create temp file with HPB config
+        HPB_TMP=$(mktemp)
+        cat > "$HPB_TMP" << 'HPBCONF'
+
         # Talk HPB Signaling (WebSocket)
         location /standalone-signaling/ {
             proxy_pass http://nextcloud-talk-hpb:8081/;
@@ -149,18 +154,19 @@ if [ "$UPDATE_NGINX" = true ]; then
             proxy_read_timeout 3600s;
             proxy_buffering off;
         }
-'
-        # Backup and insert
-        cp "$NGINX_CONF" "${NGINX_CONF}.bak"
 
-        # Insert before "location / {"
-        if [[ "$OSTYPE" == "darwin"* ]]; then
-            sed -i '' "/location \/ {/i\\
-${HPB_CONFIG}
-" "$NGINX_CONF"
-        else
-            sed -i "/location \/ {/i\\${HPB_CONFIG}" "$NGINX_CONF"
-        fi
+HPBCONF
+
+        # Insert before "location / {" using awk (works on both macOS and Linux)
+        awk -v hpb="$(cat "$HPB_TMP")" '
+            /location \/ \{/ && !done {
+                print hpb
+                done=1
+            }
+            {print}
+        ' "$NGINX_CONF" > "${NGINX_CONF}.new" && mv "${NGINX_CONF}.new" "$NGINX_CONF"
+
+        rm -f "$HPB_TMP"
 
         log "nginx.conf wurde aktualisiert (Backup: nginx.conf.bak)"
         warning "Nginx-Container muss neu gestartet werden!"
