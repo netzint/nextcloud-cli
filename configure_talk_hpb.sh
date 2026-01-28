@@ -182,25 +182,25 @@ info "Konfiguriere Nextcloud Talk..."
 docker exec nextcloud-fpm chown -R www-data:www-data /var/www/html/config 2>/dev/null || true
 
 # Talk App installieren/aktivieren
-docker exec --user www-data nextcloud-fpm /var/www/html/occ app:install spreed 2>/dev/null || true
-docker exec --user www-data nextcloud-fpm /var/www/html/occ app:enable spreed 2>/dev/null || true
+docker exec --user www-data nextcloud-fpm php occ app:install spreed 2>/dev/null || true
+docker exec --user www-data nextcloud-fpm php occ app:enable spreed 2>/dev/null || true
 
 # Signaling Server konfigurieren
 HPB_URL="https://${NC_DOMAIN}/standalone-signaling"
-docker exec --user www-data nextcloud-fpm /var/www/html/occ config:app:set spreed signaling_servers \
+docker exec --user www-data nextcloud-fpm php occ config:app:set spreed signaling_servers \
     --value="[{\"server\":\"${HPB_URL}\",\"verify\":true}]"
 
 # Signaling Secret
-docker exec --user www-data nextcloud-fpm /var/www/html/occ config:app:set spreed signaling_secret \
+docker exec --user www-data nextcloud-fpm php occ config:app:set spreed signaling_secret \
     --value="$SIGNALING_SECRET"
 
 # STUN Server
 STUN_SERVER="${NC_DOMAIN}:${TALK_PORT:-3478}"
-docker exec --user www-data nextcloud-fpm /var/www/html/occ config:app:set spreed stun_servers \
+docker exec --user www-data nextcloud-fpm php occ config:app:set spreed stun_servers \
     --value="[\"${STUN_SERVER}\"]"
 
 # TURN Server
-docker exec --user www-data nextcloud-fpm /var/www/html/occ config:app:set spreed turn_servers \
+docker exec --user www-data nextcloud-fpm php occ config:app:set spreed turn_servers \
     --value="[{\"server\":\"${STUN_SERVER}\",\"secret\":\"${TURN_SECRET}\",\"protocols\":\"udp,tcp\"}]"
 
 log "Nextcloud Talk konfiguriert"
