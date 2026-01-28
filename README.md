@@ -219,3 +219,100 @@ tail -f logs/onlyoffice_cron.log
 ```
 
 ---
+
+## Nextcloud Talk High Performance Backend (Optional)
+
+Das Talk High Performance Backend (HPB) verbessert die Video-/Audio-Qualität bei Gruppen-Calls erheblich. Es ist optional und kann jederzeit nachinstalliert werden.
+
+### Voraussetzungen
+
+- Port **3478 TCP+UDP** muss in der Firewall offen sein
+- Bei NAT: Port-Forwarding für 3478 erforderlich
+- Nextcloud muss bereits laufen
+
+### Neuinstallation (mit HPB von Anfang an)
+
+```bash
+# 1. Repository klonen
+git clone https://github.com/netzint/nextcloud-cli.git /srv/docker/nextcloud
+cd /srv/docker/nextcloud
+
+# 2. Basis-Konfiguration
+cp nextcloud.env.example nextcloud.env
+nano nextcloud.env  # Passwörter und Domain anpassen
+
+# 3. Talk HPB konfigurieren
+./configure_talk_hpb.sh --generate-secrets --update-nginx
+
+# 4. Alle Container starten (Nextcloud + HPB)
+docker compose -f docker-compose.yml -f docker-compose.talk-hpb.yml up -d
+```
+
+### Bestandsinstallation (HPB nachträglich hinzufügen)
+
+```bash
+cd /srv/docker/nextcloud
+
+# 1. Talk HPB konfigurieren (generiert Secrets, aktualisiert nginx.conf)
+./configure_talk_hpb.sh --generate-secrets --update-nginx
+
+# 2. HPB-Container starten
+docker compose -f docker-compose.yml -f docker-compose.talk-hpb.yml up -d
+
+# 3. Nginx neu laden (wichtig!)
+docker compose restart nextcloud-nginx
+```
+
+### Talk HPB Konfiguration anpassen
+
+Die Konfiguration liegt in `talk-hpb.env`:
+
+```bash
+# Domain (muss mit NEXTCLOUD_TRUSTED_DOMAINS übereinstimmen)
+NC_DOMAIN=cloud.example.com
+
+# Timezone
+TZ=Europe/Berlin
+
+# Secrets (automatisch generiert)
+TURN_SECRET=...
+SIGNALING_SECRET=...
+INTERNAL_SECRET=...
+```
+
+### HPB Status prüfen
+
+```bash
+# Container-Status
+docker compose -f docker-compose.yml -f docker-compose.talk-hpb.yml ps
+
+# HPB Logs
+docker logs nextcloud-talk-hpb
+
+# Nextcloud Talk-Einstellungen prüfen
+docker exec --user www-data nextcloud-fpm /var/www/html/occ talk:signaling:list
+```
+
+### Recording Backend (Optional)
+
+Für Call-Aufnahmen kann das Recording-Backend aktiviert werden:
+
+```bash
+# Mit Recording starten
+docker compose -f docker-compose.yml -f docker-compose.talk-hpb.yml --profile recording up -d
+
+# Recording in Nextcloud konfigurieren
+./configure_talk_hpb.sh --with-recording
+```
+
+### HPB deaktivieren
+
+```bash
+# Nur Basis-Nextcloud starten (ohne HPB)
+docker compose up -d
+
+# HPB-Container stoppen
+docker stop nextcloud-talk-hpb
+```
+
+---

@@ -1,0 +1,54 @@
+# Nextcloud Talk High Performance Backend (HPB)
+# Optional extension - use with: docker compose -f docker-compose.yml -f docker-compose.talk-hpb.yml up -d
+#
+# Setup:
+# 1. Copy talk-hpb.env.example to talk-hpb.env
+# 2. Run: ./configure_talk_hpb.sh --generate-secrets --update-nginx
+# 3. Start: docker compose -f docker-compose.yml -f docker-compose.talk-hpb.yml up -d
+# 4. Restart nginx: docker compose restart nextcloud-nginx
+
+services:
+  # Override nginx to mount config file (enables runtime changes)
+  nextcloud-nginx:
+    volumes:
+      - ./data/nc_data:/var/www/html:z
+      - ./nextcloud-nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+
+  nextcloud-talk-hpb:
+    container_name: nextcloud-talk-hpb
+    image: ghcr.io/nextcloud-releases/aio-talk:latest
+    restart: unless-stopped
+    depends_on:
+      nextcloud-fpm:
+        condition: service_started
+    ports:
+      - "3478:3478"      # TURN TCP
+      - "3478:3478/udp"  # TURN UDP
+    expose:
+      - "8081"           # Signaling (Docker-internal, nginx proxy)
+    env_file:
+      - ./talk-hpb.env
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z localhost 8081 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # Optional: Recording Backend
+  # Start with: --profile recording
+  nextcloud-talk-recording:
+    container_name: nextcloud-talk-recording
+    image: nextcloud/aio-talk-recording:latest
+    restart: unless-stopped
+    profiles:
+      - recording
+    depends_on:
+      nextcloud-talk-hpb:
+        condition: service_healthy
+    expose:
+      - "1234"           # Recording API (Docker-internal)
+    env_file:
+      - ./talk-hpb.env
+    environment:
+      - HPB_DOMAIN=nextcloud-talk-hpb:8081
