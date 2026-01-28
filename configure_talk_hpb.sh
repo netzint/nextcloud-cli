@@ -41,8 +41,23 @@ fi
 
 # Domain aus nextcloud.env holen falls vorhanden
 if [ -f "./nextcloud.env" ]; then
+    # Versuche verschiedene Quellen für die Domain
     NC_DOMAIN_FROM_ENV=$(grep -E "^NEXTCLOUD_TRUSTED_DOMAINS=" ./nextcloud.env | cut -d'=' -f2 | head -1)
-    if [ -n "$NC_DOMAIN_FROM_ENV" ]; then
+
+    # Falls nextcloud.local oder leer, versuche NEXTCLOUD_URL
+    if [ -z "$NC_DOMAIN_FROM_ENV" ] || [ "$NC_DOMAIN_FROM_ENV" = "nextcloud.local" ]; then
+        NC_DOMAIN_FROM_ENV=$(grep -E "^NEXTCLOUD_URL=" ./nextcloud.env | cut -d'=' -f2 | sed 's|https://||;s|http://||;s|/.*||' | head -1)
+    fi
+
+    # Falls immer noch nichts, prüfe ob talk-hpb.env bereits eine gültige Domain hat
+    if [ -z "$NC_DOMAIN_FROM_ENV" ] || [ "$NC_DOMAIN_FROM_ENV" = "nextcloud.local" ]; then
+        EXISTING_DOMAIN=$(grep -E "^NC_DOMAIN=" "$ENV_FILE" | cut -d'=' -f2)
+        if [ -n "$EXISTING_DOMAIN" ] && [ "$EXISTING_DOMAIN" != "nextcloud.local" ]; then
+            NC_DOMAIN_FROM_ENV="$EXISTING_DOMAIN"
+        fi
+    fi
+
+    if [ -n "$NC_DOMAIN_FROM_ENV" ] && [ "$NC_DOMAIN_FROM_ENV" != "nextcloud.local" ]; then
         info "Domain gefunden: $NC_DOMAIN_FROM_ENV"
         sed -i "s/^NC_DOMAIN=.*/NC_DOMAIN=$NC_DOMAIN_FROM_ENV/" "$ENV_FILE"
         sed -i "s/^TALK_HOST=.*/TALK_HOST=$NC_DOMAIN_FROM_ENV/" "$ENV_FILE"
